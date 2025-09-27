@@ -1,0 +1,96 @@
+
+# Global Coding Rules for Cursor
+
+## General
+- Language: Go
+- All code must be idiomatic Go and production-ready.
+- Organize code cleanly into separate files when needed (e.g., `client.go`, `methods.go`, `types.go`, `helpers.go`).
+- Add comments for maintainability.
+
+## Dependencies
+- Use `github.com/gorilla/websocket` for WebSocket communication.
+- Use Go standard library for everything else unless specified.
+
+## Package
+- Package name: `wsClient`.
+- Module path will be `github.com/khennati22/wsClient` unless overridden.
+
+
+## Core Features
+- Build a **WebSocket JSON-RPC client** for arbitrage trading bot.
+- Must support **Ethereum-compatible JSON-RPC**, but also allow **custom methods** like `arb_getBestPairs`, `arb_simulateTx`.
+- All requests must include a unique `id` for response matching, should link each id with respons chanle, and when new response coming should forward to exact chanel
+- Provide:
+  - `Send(request *Request) error` → send request and increase counter, without waiting for response
+  - `Receive(response *Response) error` → recive response and decrease counter, unmarshal response to response
+  - `SendAndReceive(request *Request, response *Response) error` → send request and receive response
+  - `PendingCounter() int32` → return the counter
+  - `Close() error` → close the connection
+  - `CheckAndReopenConnection() error` → check if the counter > 0 and if so close the connection and open a new one
+
+
+// in websocket cilent, support TextMessage and BinaryMessage
+// use pool to manage the type ceated many times.
+type Client struct {
+	*websocket.Conn
+	Counter int32
+}
+
+var id int64 = 0
+
+func NewClient() *Client {} // create a new client
+
+// helper function to build request
+func GetTransactionCount(address common.Address) *Request {}
+func GetBalance(address common.Address) *Request {}
+func GetBlockNumber() *Request {}
+func GetBlockByNumber(number int64) *Request {}
+func GetTransactionByHash(hash common.Hash) *Request {}
+func GetTransactionReceipt(hash common.Hash) *Request {}
+func BuildStateDiff() StateOverride {}
+
+
+// types
+
+// Request represents a JSON-RPC request
+type Request struct {
+	JSONRPC string      `json:"jsonrpc"`
+	ID      int64       `json:"id"`
+	Method  string      `json:"method"`
+	Params  interface{} `json:"params,omitempty"`
+}
+NewRequest(method string, params []interface{}, id int) *Request {
+	return &Request{
+		JSONRPC: "2.0",
+		Method:  method,
+		Params:  params,
+		ID:      id,
+	}
+}
+// Response represents a JSON-RPC response
+type Response struct {
+	// JSONRPC field omitted for performance - we don't need it after parsing
+	ID     int64           `json:"id"`
+	Result json.RawMessage `json:"result,omitempty"`
+	Error  *RPCError       `json:"error,omitempty"`
+}
+
+// RPCError represents a JSON-RPC error
+type RPCError struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
+func (e *RPCError) Error() string {
+	return e.Message
+}
+
+// StateOverride represents a state override for a specific address
+type StateOverride struct {
+	Balance   *string           `json:"balance,omitempty"`   // Override balance
+	Nonce     *uint64           `json:"nonce,omitempty"`     // Override nonce
+	Code      *string           `json:"code,omitempty"`      // Override code
+	State     map[string]string `json:"state,omitempty"`     // Override individual storage slots
+	StateDiff map[string]string `json:"stateDiff,omitempty"` // Override storage slots as diff
+}
