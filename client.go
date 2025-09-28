@@ -99,6 +99,16 @@ func (c *Client) Close() error {
 	return err
 }
 
+// GetURL returns the WebSocket URL
+func (c *Client) GetURL() string {
+	return c.url
+}
+
+// IsConnected checks if the client is connected
+func (c *Client) IsConnected() bool {
+	return c.conn != nil
+}
+
 // CheckAndReopenConnection checks if counter > 0 and reopens connection if needed
 func (c *Client) CheckAndReopenConnection() error {
 	if c.PendingCounter() > 0 {
