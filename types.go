@@ -3,6 +3,7 @@ package wsClient
 import (
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"sync/atomic"
 
 	// "github.com/ethereum/go-ethereum"
@@ -19,6 +20,86 @@ type Request struct {
 	ID      int64       `json:"id"`
 	Method  string      `json:"method"`
 	Params  interface{} `json:"params,omitempty"`
+}
+
+// ResponseAmount represents a JSON-RPC response for a single amount
+type ResponseAmount struct {
+	JSONRPC string          `json:"jsonrpc"`
+	ID      json.RawMessage `json:"id"`
+	Result  BigInt          `json:"result,omitempty"`
+	Error   *RPCError       `json:"error,omitempty"`
+}
+
+// ResponseAmounts represents a JSON-RPC response for multiple amounts
+type ResponseAmounts struct {
+	JSONRPC string          `json:"jsonrpc"`
+	ID      json.RawMessage `json:"id"`
+	Result  BigIntSlice     `json:"result,omitempty"`
+	Error   *RPCError       `json:"error,omitempty"`
+}
+
+type BigInt struct{ *big.Int }
+
+func (u *BigInt) UnmarshalJSON(b []byte) error {
+	var raw hexutil.Bytes // parses "0x..." → []byte directly
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+	if len(raw) == 0 {
+		u.Int = new(big.Int)
+		return nil
+	}
+	if len(raw) >= 32 {
+		u.Int = new(big.Int).SetBytes(raw[len(raw)-32:])
+	} else {
+		u.Int = new(big.Int).SetBytes(raw)
+	}
+	return nil
+}
+
+type BigIntSlice struct{ Values []*big.Int }
+
+func (a *BigIntSlice) UnmarshalJSON(b []byte) error {
+	// Try single concatenated hex string first
+	var single string
+	if err := json.Unmarshal(b, &single); err == nil {
+		// Parse hex string to bytes
+		raw, err := hexutil.Decode(single)
+		if err != nil {
+			return fmt.Errorf("decode hex string: %w", err)
+		}
+
+		// Handle concatenated 32-byte values
+		if len(raw)%32 != 0 {
+			return fmt.Errorf("invalid concatenated payload len=%d (not multiple of 32)", len(raw))
+		}
+		n := len(raw) / 32
+		a.Values = make([]*big.Int, n)
+		for i := 0; i < n; i++ {
+			word := raw[i*32 : (i+1)*32]
+			a.Values[i] = new(big.Int).SetBytes(word)
+		}
+		return nil
+	}
+
+	// Fallback to array of hex strings
+	var raws []string
+	if err := json.Unmarshal(b, &raws); err != nil {
+		return err
+	}
+	a.Values = make([]*big.Int, len(raws))
+	for i, rawStr := range raws {
+		raw, err := hexutil.Decode(rawStr)
+		if err != nil {
+			return fmt.Errorf("decode hex string at index %d: %w", i, err)
+		}
+		if len(raw) >= 32 {
+			a.Values[i] = new(big.Int).SetBytes(raw[len(raw)-32:])
+		} else {
+			a.Values[i] = new(big.Int).SetBytes(raw)
+		}
+	}
+	return nil
 }
 
 // Use the official ethereum.CallMsg struct from go-ethereum
@@ -67,19 +148,6 @@ type Response struct {
 	ID     int64           `json:"id"`
 	Result json.RawMessage `json:"result,omitempty"`
 	Error  *RPCError       `json:"error,omitempty"`
-}
-
-// Response represents a JSON-RPC response
-type ResponseAmount struct {
-	ID     int64        `json:"id"`
-	Result *hexutil.Big `json:"result,omitempty"`
-	Error  *RPCError    `json:"error,omitempty"`
-}
-
-type ResponseAmounts struct {
-	ID     int64          `json:"id"`
-	Result []*hexutil.Big `json:"result,omitempty"`
-	Error  *RPCError      `json:"error,omitempty"`
 }
 
 // String returns a string representation of the response
