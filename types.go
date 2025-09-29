@@ -69,6 +69,19 @@ type Response struct {
 	Error  *RPCError       `json:"error,omitempty"`
 }
 
+// Response represents a JSON-RPC response
+type ResponseAmount struct {
+	ID     int64        `json:"id"`
+	Result *hexutil.Big `json:"result,omitempty"`
+	Error  *RPCError    `json:"error,omitempty"`
+}
+
+type ResponseAmounts struct {
+	ID     int64          `json:"id"`
+	Result []*hexutil.Big `json:"result,omitempty"`
+	Error  *RPCError      `json:"error,omitempty"`
+}
+
 // String returns a string representation of the response
 func (r *Response) String() string {
 	return fmt.Sprintf("Response{ID: %d, Result: %s, Error: %v}", r.ID, string(r.Result), r.Error)

@@ -55,7 +55,7 @@ func (c *Client) Send(request *Request) error {
 }
 
 // Receive receives a response and decrements counter
-func (c *Client) Receive(response *Response) error {
+func (c *Client) Receive(response any) error {
 	if c.conn == nil {
 		return fmt.Errorf("connection is closed")
 	}
@@ -75,7 +75,7 @@ func (c *Client) Receive(response *Response) error {
 }
 
 // SendAndReceive sends a request and receives response
-func (c *Client) SendAndReceive(request *Request, response *Response) error {
+func (c *Client) SendAndReceive(request *Request, response any) error {
 	if err := c.Send(request); err != nil {
 		return err
 	}
