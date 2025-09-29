@@ -1,4 +1,4 @@
-module github.com/0xKhennati/wsClient
+module github.com/0xKhennati/wsclient
 
 go 1.21
 
