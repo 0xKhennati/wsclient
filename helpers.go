@@ -68,10 +68,9 @@ func BuildRequestGetTransactionReceipt(hash common.Hash) *Request {
 	return NewRequest(0, "eth_getTransactionReceipt", params)
 }
 
-// BuildStateOverride creates a new StateOverride struct
-func BuildStateOverride() *StateOverride {
-	return &StateOverride{
-		State:     make(map[string]string),
-		StateDiff: make(map[string]string),
-	}
-}
+// // BuildStateOverride creates a new StateOverride struct
+// func BuildStateOverride() *StateOverride {
+// 	return &StateOverride{
+// 		StateDiff: make(map[string]string),
+// 	}
+// }

@@ -173,9 +173,9 @@ func (e *RPCError) Error() string {
 
 // StateOverride represents a state override for a specific address
 type StateOverride struct {
-	Balance   *string           `json:"balance,omitempty"`   // Override balance
-	Nonce     *uint64           `json:"nonce,omitempty"`     // Override nonce
-	Code      *string           `json:"code,omitempty"`      // Override code
-	State     map[string]string `json:"state,omitempty"`     // Override individual storage slots
+	// Balance   *string           `json:"balance,omitempty"`   // Override balance
+	// Nonce     *uint64           `json:"nonce,omitempty"`     // Override nonce
+	// Code      *string           `json:"code,omitempty"`      // Override code
+	// State     map[string]string `json:"state,omitempty"`     // Override individual storage slots
 	StateDiff map[string]string `json:"stateDiff,omitempty"` // Override storage slots as diff
 }
