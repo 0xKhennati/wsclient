@@ -28,3 +28,8 @@ func Build_swap_MultiSwap(tokenIn common.Address, amountIn, miniAmountOut, index
 func Build_swap_simulateSwapAllBalance(tokenIn common.Address, pairs ...PairInfoInterface) (hexutil.Bytes, error) {
 	return BuildSwapV2CallData("simulateSwapAllBalance", tokenIn, newPairInfoList(pairs...))
 }
+
+// Build_simulateSwapAllBalance builds the call data for the simulateSwapAllBalance function
+func Build_simulateSwapAllBalance(tokenIn common.Address, pairs ...PairInfoInterface) (hexutil.Bytes, error) {
+	return BuildSwapV2CallData("simulateSwapAllBalance", tokenIn, newPairInfoList(pairs...))
+}
